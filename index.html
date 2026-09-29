@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrandPulse 🌸 AI Sentiment Diary</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(-45deg, #fff0f3, #fdf0ed, #f3e8ff, #e8f0fe, #fff5f5);
+      background-size: 400% 400%;
+      animation: iridescentShimmer 14s ease infinite;
+    }
+
+    @keyframes iridescentShimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .shimmer-sweep {
+      background: linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.6) 45%,
+        rgba(255, 220, 235, 0.75) 50%,
+        rgba(255, 255, 255, 0.6) 55%,
+        rgba(255, 255, 255, 0) 80%
+      );
+      background-size: 250% 100%;
+      animation: lightSweep 6s ease-in-out infinite;
+    }
+
+    @keyframes lightSweep {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .serif-accent {
+      font-family: 'Playfair Display', serif;
+    }
+
+    .soft-shadow {
+      box-shadow: 0 12px 35px -5px rgba(244, 114, 182, 0.22);
+    }
+  </style>
+</head>
+<body class="text-stone-800 min-h-screen flex flex-col relative selection:bg-pink-200 selection:text-pink-900">
+
+  <!-- Smooth Shimmer Overlay (No Dots) -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+    <div class="shimmer-sweep absolute inset-0 opacity-70"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white/40 backdrop-blur-md sticky top-0 z-50 border-b border-pink-200/40">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="h-9 w-9 rounded-2xl bg-gradient-to-tr from-pink-300 to-rose-200 flex items-center justify-center text-rose-800 font-bold text-sm shadow-sm">
+          ✨
+        </span>
+        <span class="text-xl font-extrabold tracking-tight text-stone-800">
+          Brand<span class="text-pink-500 serif-accent italic font-normal">Pulse</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-4xl mx-auto px-4 py-12 flex-1 w-full">
+
+    <!-- Hero Section -->
+    <div class="text-center max-w-xl mx-auto mb-10">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/70 border border-pink-200 text-pink-500 text-xs font-semibold mb-3 soft-shadow backdrop-blur-sm">
+        <span>🌷</span> Curated Brand Feelings
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-stone-800 mb-3">
+        Discover the <span class="serif-accent italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-400 to-purple-400">true vibe</span>
+      </h1>
+      <p class="text-stone-500 text-sm leading-relaxed">
+        Search any brand, label, or startup to read what real people feel, adore, and want improved.
+      </p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="max-w-lg mx-auto mb-8">
+      <div class="relative flex items-center bg-white/85 backdrop-blur-md rounded-3xl p-1.5 border border-pink-200/80 soft-shadow transition-all focus-within:ring-2 focus-within:ring-pink-300">
+        <i data-lucide="sparkles" class="w-4 h-4 absolute left-4 text-pink-400"></i>
+        <input 
+          id="companyInput" 
+          type="text" 
+          placeholder="Search Rare Beauty, Glossier, Zepto..." 
+          class="w-full bg-transparent pl-11 pr-28 py-2.5 text-sm placeholder-stone-400 text-stone-700 outline-none"
+          onkeydown="if(event.key === 'Enter') analyzeCompany()"
+        />
+        <button 
+          onclick="analyzeCompany()" 
+          class="px-5 py-2.5 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-semibold text-xs rounded-2xl transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
+        >
+          Check Vibe 🪄
+        </button>
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="flex items-center justify-center gap-2 mt-4 text-xs text-stone-500 font-medium">
+        <span>Inspirations:</span>
+        <button onclick="setSample('Glossier')" class="px-3 py-1 rounded-full bg-white/75 border border-pink-200/70 text-pink-700/80 hover:bg-pink-50 transition cursor-pointer">Glossier</button>
+        <button onclick="setSample('Nykaa')" class="px-3 py-1 rounded-full bg-white/75 border border-pink-200/70 text-pink-700/80 hover:bg-pink-50 transition cursor-pointer">Nykaa</button>
+        <button onclick="setSample('Pinterest')" class="px-3 py-1 rounded-full bg-white/75 border border-pink-200/70 text-pink-700/80 hover:bg-pink-50 transition cursor-pointer">Pinterest</button>
+      </div>
+    </div>
+
+    <!-- Loading Animation -->
+    <div id="loader" class="hidden text-center py-16">
+      <div class="relative inline-block w-10 h-10 mb-3">
+        <div class="absolute inset-0 rounded-full bg-pink-300 animate-ping opacity-75"></div>
+        <div class="relative rounded-full bg-pink-400 w-10 h-10 flex items-center justify-center text-white text-xs">☕</div>
+      </div>
+      <p class="text-xs text-stone-500 font-medium tracking-wide">Steeping customer tea & sentiments...</p>
+    </div>
+
+    <!-- Error Box -->
+    <div id="errorAlert" class="hidden max-w-lg mx-auto p-4 mb-6 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5 backdrop-blur-sm">
+      <span>🍓</span>
+      <span id="errorMessage">Oops! Something went sideways.</span>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsCard" class="hidden space-y-6">
+
+      <!-- Executive Overview Card -->
+      <div class="p-6 rounded-3xl bg-white/80 backdrop-blur-md border border-pink-200/70 soft-shadow flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2.5 mb-2">
+            <h2 id="resCompany" class="text-2xl font-black text-stone-800 tracking-tight">Company</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100/70 text-rose-600 border border-rose-200/50">Mood Report</span>
+          </div>
+          <p id="resSummary" class="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-xl">Summary will show up here.</p>
+        </div>
+        <div class="flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white px-6 py-4 rounded-2xl border border-pink-100 min-w-[130px]">
+          <span class="text-[11px] font-bold text-pink-500 uppercase tracking-widest mb-0.5">Vibe Score</span>
+          <div class="text-3xl font-black text-stone-800 flex items-baseline">
+            <span id="resScore">88</span><span class="text-xs font-bold text-stone-400">/100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Pastel Columns -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- Column 1: Loved Features (Matcha) -->
+        <div class="p-5 rounded-3xl bg-[#F4F9F4]/90 backdrop-blur-sm border border-[#E0EFE0] flex flex-col soft-shadow">
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#DFEEDF] text-emerald-800 font-bold text-xs">
+            <span>🌿</span> Loved By Community
+          </div>
+          <ul id="positivesList" class="space-y-2.5 text-xs text-stone-700 flex-1"></ul>
+        </div>
+
+        <!-- Column 2: Criticisms (Peach) -->
+        <div class="p-5 rounded-3xl bg-[#FFF6F6]/90 backdrop-blur-sm border border-[#FFE4E4] flex flex-col soft-shadow">
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#FBDCDC] text-rose-700 font-bold text-xs">
+            <span>💔</span> Needs Gentle Work
+          </div>
+          <ul id="negativesList" class="space-y-2.5 text-xs text-stone-700 flex-1"></ul>
+        </div>
+
+        <!-- Column 3: Suggestions (Lilac) -->
+        <div class="p-5 rounded-3xl bg-[#F9F7FD]/90 backdrop-blur-sm border border-[#EFEAF9] flex flex-col soft-shadow">
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[#ECE5F6] text-purple-800 font-bold text-xs">
+            <span>💡</span> Dream Wishlist
+          </div>
+          <ul id="suggestionsList" class="space-y-2.5 text-xs text-stone-700 flex-1"></ul>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+    function setSample(name) {
+      document.getElementById('companyInput').value = name;
+      analyzeCompany();
+    }
+
+    async function analyzeCompany() {
+      const company = document.getElementById('companyInput').value.trim();
+      if (!company) return;
+
+      const loader = document.getElementById('loader');
+      const resultsCard = document.getElementById('resultsCard');
+      const errorAlert = document.getElementById('errorAlert');
+
+      resultsCard.classList.add('hidden');
+      errorAlert.classList.add('hidden');
+      loader.classList.remove('hidden');
+
+      const systemPrompt = `Analyze market perception, customer reviews, and feedback for "${company}". Output strictly valid JSON matching this schema:
+      {
+        "company": "${company}",
+        "score": 84,
+        "summary": "2-sentence warm, executive summary of perception.",
+        "positives": [{"tag": "Charm/Quality", "text": "Detail"}],
+        "negatives": [{"severity": "Concern", "text": "Detail"}],
+        "suggestions": [{"title": "Recommendation", "text": "Detail"}]
+      }`;
+
+      try {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemPrompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        if (!response.ok) {
+          const errBody = await response.json();
+          throw new Error(errBody.error?.message || 'API request rejected.');
+        }
+
+        const data = await response.json();
+        let rawText = data.candidates[0].content.parts[0].text;
+        rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const output = JSON.parse(rawText);
+
+        renderResults(output);
+      } catch (err) {
+        document.getElementById('errorMessage').textContent = err.message || 'Could not fetch vibes right now.';
+        errorAlert.classList.remove('hidden');
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    function renderResults(data) {
+      document.getElementById('resCompany').textContent = data.company;
+      document.getElementById('resScore').textContent = data.score;
+      document.getElementById('resSummary').textContent = data.summary;
+
+      const posList = document.getElementById('positivesList');
+      posList.innerHTML = (data.positives || []).map(p => `
+        <li class="bg-white/85 p-3 rounded-2xl border border-emerald-100/60 shadow-sm">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full mr-1">${p.tag}</span>
+          ${p.text}
+        </li>
+      `).join('');
+
+      const negList = document.getElementById('negativesList');
+      negList.innerHTML = (data.negatives || []).map(n => `
+        <li class="bg-white/85 p-3 rounded-2xl border border-rose-100/60 shadow-sm">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100/60 px-2 py-0.5 rounded-full mr-1">${n.severity}</span>
+          ${n.text}
+        </li>
+      `).join('');
+
+      const sugList = document.getElementById('suggestionsList');
+      sugList.innerHTML = (data.suggestions || []).map(s => `
+        <li class="bg-white/85 p-3 rounded-2xl border border-purple-100/60 shadow-sm">
+          <div class="font-bold text-purple-900 mb-0.5">${s.title}</div>
+          <div class="text-stone-600">${s.text}</div>
+        </li>
+      `).join('');
+
+      document.getElementById('resultsCard').classList.remove('hidden');
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
