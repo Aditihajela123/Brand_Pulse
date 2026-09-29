@@ -201,8 +201,8 @@ if (!apiKey) {
     }
 }
 async function analyzeCompany() {
-    // 1. Input box se brand/company name get karein
-    const inputElement = document.getElementById("companyInput"); // Apne HTML input ki ID match kar lein
+    // 1. Input se brand name uthao
+    const inputElement = document.getElementById("companyInput"); // Apne input field ki ID match kar lena
     const companyName = inputElement ? inputElement.value.trim() : "";
 
     if (!companyName) {
@@ -210,11 +210,8 @@ async function analyzeCompany() {
         return;
     }
 
-    // UI Loading state (Optional)
-    console.log("Analyzing brand:", companyName);
-
+    // 2. Vercel backend function ko request bhejo
     try {
-        // 2. Vercel Serverless Function ko Call Karein
         const response = await fetch("/api/analyze", {
             method: "POST",
             headers: {
@@ -226,21 +223,23 @@ async function analyzeCompany() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch analysis");
+            throw new Error(data.error || "Failed to fetch response");
         }
 
-        // 3. OpenAI se mila response UI par show karein
-        console.log("Analysis Result:", data);
-        
-        // Example: Agar aapke paas result display karne ke liye koi div hai
-        // document.getElementById("resultContainer").innerText = data.choices[0].message.content;
+        // Gemini ka response display karne ke liye
+        const resultText = data.candidates[0].content.parts[0].text;
+        console.log("Gemini Result:", resultText);
+
+        // Agar aapke paas result dikhane ke liye koi container hai:
+        // document.getElementById("resultContainer").innerText = resultText;
 
     } catch (error) {
-        console.error("Error analyzing company:", error);
+        console.error("Error:", error);
         alert("Error: " + error.message);
     }
 }
-    function renderResults(data) {
+
+function renderResults(data) {
       document.getElementById('resCompany').textContent = data.company;
       document.getElementById('resScore').textContent = data.score;
       document.getElementById('resSummary').textContent = data.summary;
