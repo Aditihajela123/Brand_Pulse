@@ -4,29 +4,45 @@ export default async function handler(req, res) {
     }
 
     const { companyName } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY; // Vercel Environment Variable
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(500).json({ error: 'GEMINI_API_KEY is missing on Vercel' });
+        return res.status(500).json({ error: 'GEMINI_API_KEY is missing in Vercel settings.' });
     }
 
     try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        
+
+        const promptText = `Analyze the brand "${companyName}" and return ONLY a raw JSON object (no markdown, no backticks) in the following format:
+{
+  "company": "${companyName}",
+  "score": 85,
+  "summary": "Short 2 sentence sentiment summary.",
+  "positives": [{"tag": "QUALITY", "text": "What people love"}],
+  "negatives": [{"severity": "HIGH", "text": "What people complain about"}],
+  "suggestions": [{"title": "Improvement", "text": "Feature suggestion"}]
+}`;
+
         const response = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `Analyze this brand: ${companyName}` }]
-                }]
+                contents: [{ parts: [{ text: promptText }] }]
             })
         });
 
         const data = await response.json();
-        return res.status(200).json(data);
+
+        if (!response.ok) {
+            return res.status(response.status).json({ error: data.error?.message || "Gemini API error" });
+        }
+
+        let rawText = data.candidates[0].content.parts[0].text;
+        rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+        
+        const jsonResponse = JSON.parse(rawText);
+        return res.status(200).json(jsonResponse);
+
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

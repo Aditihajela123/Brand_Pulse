@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BrandPulse 🌸 AI Sentiment Diary</title>
+  <title>BrandPulse 🌸 AI Sentiment </title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
 </head>
 <body class="text-stone-800 min-h-screen flex flex-col relative selection:bg-pink-200 selection:text-pink-900">
 
-  <!-- Smooth Shimmer Overlay (No Dots) -->
+  <!-- Smooth Shimmer Overlay -->
   <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
     <div class="shimmer-sweep absolute inset-0 opacity-70"></div>
   </div>
@@ -186,68 +186,63 @@
 
   <script>
     lucide.createIcons();
+
     function setSample(name) {
       document.getElementById('companyInput').value = name;
       analyzeCompany();
     }
-    // Browser ki local storage se key mangwa rahe hain
-let apiKey = localStorage.getItem("OPENAI_API_KEY");
 
-// Agar key saved nahi hai, toh user se prompt popup karke maangega
-if (!apiKey) {
-    apiKey = prompt("Enter your OpenAI API Key:");
-    if (apiKey) {
-        localStorage.setItem("OPENAI_API_KEY", apiKey);
-    }
-}
-async function analyzeCompany() {
-    // 1. Input se brand name uthao
-    const inputElement = document.getElementById("companyInput"); // Apne input field ki ID match kar lena
-    const companyName = inputElement ? inputElement.value.trim() : "";
+    async function analyzeCompany() {
+      const companyInput = document.getElementById("companyInput");
+      const companyName = companyInput ? companyInput.value.trim() : "";
+      const loader = document.getElementById("loader");
+      const errorAlert = document.getElementById("errorAlert");
+      const resultsCard = document.getElementById("resultsCard");
 
-    if (!companyName) {
+      if (!companyName) {
         alert("Please enter a brand name!");
         return;
-    }
+      }
 
-    // 2. Vercel backend function ko request bhejo
-    try {
+      // UI States Reset
+      errorAlert.classList.add("hidden");
+      resultsCard.classList.add("hidden");
+      loader.classList.remove("hidden");
+
+      try {
         const response = await fetch("/api/analyze", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ companyName: companyName })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ companyName: companyName })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || "Failed to fetch response");
+          throw new Error(data.error || "Failed to analyze brand");
         }
 
-        // Gemini ka response display karne ke liye
-        const resultText = data.candidates[0].content.parts[0].text;
-        console.log("Gemini Result:", resultText);
+        // Render Data into UI
+        renderResults(data);
 
-        // Agar aapke paas result dikhane ke liye koi container hai:
-        // document.getElementById("resultContainer").innerText = resultText;
-
-    } catch (error) {
+      } catch (error) {
         console.error("Error:", error);
-        alert("Error: " + error.message);
+        document.getElementById("errorMessage").textContent = error.message;
+        errorAlert.classList.remove("hidden");
+      } finally {
+        loader.classList.add("hidden");
+      }
     }
-}
 
-function renderResults(data) {
-      document.getElementById('resCompany').textContent = data.company;
-      document.getElementById('resScore').textContent = data.score;
-      document.getElementById('resSummary').textContent = data.summary;
+    function renderResults(data) {
+      document.getElementById('resCompany').textContent = data.company || "Brand";
+      document.getElementById('resScore').textContent = data.score || "80";
+      document.getElementById('resSummary').textContent = data.summary || "";
 
       const posList = document.getElementById('positivesList');
       posList.innerHTML = (data.positives || []).map(p => `
         <li class="bg-white/85 p-3 rounded-2xl border border-emerald-100/60 shadow-sm">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full mr-1">${p.tag}</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full mr-1">${p.tag || 'Loved'}</span>
           ${p.text}
         </li>
       `).join('');
@@ -255,7 +250,7 @@ function renderResults(data) {
       const negList = document.getElementById('negativesList');
       negList.innerHTML = (data.negatives || []).map(n => `
         <li class="bg-white/85 p-3 rounded-2xl border border-rose-100/60 shadow-sm">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100/60 px-2 py-0.5 rounded-full mr-1">${n.severity}</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100/60 px-2 py-0.5 rounded-full mr-1">${n.severity || 'Issue'}</span>
           ${n.text}
         </li>
       `).join('');
