@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Updated model endpoint to gemini-2.0-flash
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // Updated model endpoint to gemini-3.8-flash
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
         const promptText = `Analyze the brand "${companyName}" and return ONLY a raw JSON object (no markdown, no backticks) in the following format:
 {
