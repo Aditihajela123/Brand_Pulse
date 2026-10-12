@@ -49,7 +49,8 @@ Return ONLY a valid JSON object in this format:
             });
 
             data = await response.json();
-
+           console.log("Gemini status:", response.status);
+console.log("Gemini error:", data.error?.message);
             if (response.ok) break;
 
             const retryable = [408, 429, 500, 502, 503, 504]
