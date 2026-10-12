@@ -1,20 +1,30 @@
+
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { companyName } = req.body;
+    const { companyName } = req.body || {};
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(500).json({ error: 'GEMINI_API_KEY is missing in Vercel settings.' });
+        return res.status(500).json({
+            error: "GEMINI_API_KEY is missing in Vercel settings."
+        });
+    }
+
+    if (!companyName || typeof companyName !== "string") {
+        return res.status(400).json({
+            error: "Please enter a valid brand name."
+        });
     }
 
     try {
-        // Updated model endpoint to gemini-3.8-flash
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+        const url =
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
-        const promptText = `Analyze the brand "${companyName}" and return ONLY a raw JSON object (no markdown, no backticks) in the following format:
+        const promptText = `Analyze the brand "${companyName}".
+Return ONLY a valid JSON object in this format:
 {
   "company": "${companyName}",
   "score": 85,
@@ -24,28 +34,70 @@ export default async function handler(req, res) {
   "suggestions": [{"title": "Improvement", "text": "Feature suggestion"}]
 }`;
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }]
-            })
-        });
+        let response;
+        let data;
 
-        const data = await response.json();
-        console.log("Gemini status:", response.status);
-        console.log("Gemini response:", JSON.stringify(data));
-        if (!response.ok) {
-            return res.status(response.status).json({ error: data.error?.message || "Gemini API error" });
+        for (let attempt = 0; attempt < 3; attempt++) {
+            response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: promptText }]
+                    }]
+                })
+            });
+
+            data = await response.json();
+
+            if (response.ok) break;
+
+            const retryable = [408, 429, 500, 502, 503, 504]
+                .includes(response.status);
+
+            if (!retryable || attempt === 2) {
+                console.error("Gemini status:", response.status);
+                console.error("Gemini error:", data.error?.message);
+                return res.status(response.status).json({
+                    error: data.error?.message || "Gemini API error"
+                });
+            }
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 1000 * (2 ** attempt))
+            );
         }
 
-        let rawText = data.candidates[0].content.parts[0].text;
-        rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-        
-        const jsonResponse = JSON.parse(rawText);
+        const rawText =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+            return res.status(502).json({
+                error: "Gemini returned an empty response. Please try again."
+            });
+        }
+
+        const cleanedText = rawText
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+
+        let jsonResponse;
+
+        try {
+            jsonResponse = JSON.parse(cleanedText);
+        } catch {
+            return res.status(502).json({
+                error: "Gemini returned an invalid response. Please try again."
+            });
+        }
+
         return res.status(200).json(jsonResponse);
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error("Analysis request failed:", error.message);
+        return res.status(500).json({
+            error: "Unable to analyze this brand right now. Please try again."
+        });
     }
 }
